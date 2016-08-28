@@ -102,17 +102,20 @@ PRODUCT_BOOT_JARS := \
     org.apache.http.legacy.boot
 
 # The order of PRODUCT_SYSTEM_SERVER_JARS matters.
+ifneq ($(TARGET_DISABLE_CMSDK), true)
 PRODUCT_SYSTEM_SERVER_JARS := \
+    org.cyanogenmod.platform \
+    org.cyanogenmod.hardware
+endif
+PRODUCT_SYSTEM_SERVER_JARS += \
     services \
     ethernet-service \
     wifi-service
 
-# Adoptable external storage supports both ext4 and f2fs
+# Adoptable external storage f2fs support
 PRODUCT_PACKAGES += \
-    e2fsck \
-    make_ext4fs \
     fsck.f2fs \
-    make_f2fs \
+    mkfs.f2fs \
 
 PRODUCT_DEFAULT_PROPERTY_OVERRIDES += \
     ro.zygote=zygote32

@@ -70,7 +70,7 @@ $(products_graph): PRIVATE_PRODUCTS := $(really_all_products)
 $(products_graph): PRIVATE_PRODUCTS_FILTER := $(products_list)
 
 $(products_graph): $(this_makefile)
-	@echo Product graph DOT: $@ for $(PRIVATE_PRODUCTS_FILTER)
+	@echo "Product graph DOT:"" $@ for $(PRIVATE_PRODUCTS_FILTER)"
 	$(hide) echo 'digraph {' > $@.in
 	$(hide) echo 'graph [ ratio=.5 ];' >> $@.in
 	$(hide) $(foreach p,$(PRIVATE_PRODUCTS), \
@@ -89,7 +89,7 @@ endef
 # $(1) product file
 define transform-product-debug
 $(OUT_DIR)/products/$(strip $(1)).txt: $(this_makefile)
-	@echo Product debug info file: $$@
+	@echo "Product debug info file:"" $$@"
 	$(hide) rm -f $$@
 	$(hide) mkdir -p $$(dir $$@)
 	$(hide) echo 'FILE=$(strip $(1))' >> $$@
@@ -105,6 +105,7 @@ $(OUT_DIR)/products/$(strip $(1)).txt: $(this_makefile)
 	$(hide) echo 'PRODUCT_DEFAULT_PROPERTY_OVERRIDES=$$(PRODUCTS.$(strip $(1)).PRODUCT_DEFAULT_PROPERTY_OVERRIDES)' >> $$@
 	$(hide) echo 'PRODUCT_CHARACTERISTICS=$$(PRODUCTS.$(strip $(1)).PRODUCT_CHARACTERISTICS)' >> $$@
 	$(hide) echo 'PRODUCT_COPY_FILES=$$(PRODUCTS.$(strip $(1)).PRODUCT_COPY_FILES)' >> $$@
+	$(hide) echo 'PRODUCT_COPY_FILES_OVERRIDES=$$(PRODUCTS.$(strip $(1)).PRODUCT_COPY_FILES_OVERRIDES)' >> $$@
 	$(hide) echo 'PRODUCT_OTA_PUBLIC_KEYS=$$(PRODUCTS.$(strip $(1)).PRODUCT_OTA_PUBLIC_KEYS)' >> $$@
 	$(hide) echo 'PRODUCT_EXTRA_RECOVERY_KEYS=$$(PRODUCTS.$(strip $(1)).PRODUCT_EXTRA_RECOVERY_KEYS)' >> $$@
 	$(hide) echo 'PRODUCT_PACKAGE_OVERLAYS=$$(PRODUCTS.$(strip $(1)).PRODUCT_PACKAGE_OVERLAYS)' >> $$@
@@ -122,7 +123,7 @@ $(call product-debug-filename, $(p)): \
 			$(OUT_DIR)/products/$(strip $(1)).txt \
 			build/tools/product_debug.py \
 			$(this_makefile)
-	@echo Product debug html file: $$@
+	@echo "Product debug html file:"" $$@"
 	$(hide) mkdir -p $$(dir $$@)
 	$(hide) cat $$< | build/tools/product_debug.py > $$@
 endef
@@ -134,11 +135,11 @@ $(foreach p,$(really_all_products), \
    )
 
 $(products_pdf): $(products_graph)
-	@echo Product graph PDF: $@
+	@echo "Product graph PDF:"" $@"
 	dot -Tpdf -Nshape=box -o $@ $<
 
 $(products_svg): $(products_graph) $(product_debug_files)
-	@echo Product graph SVG: $@
+	@echo "Product graph SVG:"" $@"
 	dot -Tsvg -Nshape=box -o $@ $<
 
 product-graph: $(products_pdf) $(products_svg)

@@ -160,7 +160,7 @@ include $(BUILD_SYSTEM)/aapt2.mk
 $(my_res_package) : $(framework_res_package_export_deps)
 else
 $(R_file_stamp) : $(all_resources) $(full_android_manifest) $(AAPT) $(framework_res_package_export_deps)
-	@echo "target R.java/Manifest.java: $(PRIVATE_MODULE) ($@)"
+	@echo "target R.java/Manifest.java:"" $(PRIVATE_MODULE) ($@)"
 	$(create-resource-java-files)
 	$(hide) find $(PRIVATE_SOURCE_INTERMEDIATES_DIR) -name R.java | xargs cat > $@
 endif  # LOCAL_USE_AAPT2
@@ -180,6 +180,7 @@ $(built_aar): PRIVATE_ANDROID_MANIFEST := $(full_android_manifest)
 $(built_aar): PRIVATE_CLASSES_JAR := $(full_classes_jar)
 $(built_aar): PRIVATE_RESOURCE_DIR := $(LOCAL_RESOURCE_DIR)
 $(built_aar): PRIVATE_R_TXT := $(LOCAL_INTERMEDIATE_SOURCE_DIR)/R.txt
+$(built_aar): PRIVATE_CONSUMER_PROGUARD_FILE := $(LOCAL_CONSUMER_PROGUARD_FILE)
 $(built_aar) : $(full_classes_jar) $(full_android_manifest)
 	@echo "target AAR:  $(PRIVATE_MODULE) ($@)"
 	$(hide) rm -rf $(dir $@)aar && mkdir -p $(dir $@)aar/res
@@ -188,6 +189,9 @@ $(built_aar) : $(full_classes_jar) $(full_android_manifest)
 	# Note: Use "cp -n" to honor the resource overlay rules, if multiple res dirs exist.
 	$(hide) $(foreach res,$(PRIVATE_RESOURCE_DIR),cp -Rfn $(res)/* $(dir $@)aar/res;)
 	$(hide) cp $(PRIVATE_R_TXT) $(dir $@)aar/R.txt
+	$(hide) if [ ! -z "$(PRIVATE_CONSUMER_PROGUARD_FILE)" ]; then \
+			echo "Including '$(PRIVATE_CONSUMER_PROGUARD_FILE)'"; \
+			cp $(PRIVATE_CONSUMER_PROGUARD_FILE) $(dir $@)aar/proguard.txt; fi
 	$(hide) jar -cMf $@ \
 	  -C $(dir $@)aar .
 

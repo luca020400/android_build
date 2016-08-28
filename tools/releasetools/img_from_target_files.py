@@ -26,14 +26,20 @@ Usage:  img_from_target_files [flags] input_target_files output_image_zip
 
 """
 
+from __future__ import print_function
+
 import sys
 
 if sys.hexversion < 0x02070000:
-  print >> sys.stderr, "Python 2.7 or newer is required."
+  print("Python 2.7 or newer is required.", file=sys.stderr)
   sys.exit(1)
 
+import errno
 import os
+import re
 import shutil
+import subprocess
+import tempfile
 import zipfile
 
 import common
@@ -47,6 +53,31 @@ def CopyInfo(output_zip):
       output_zip, os.path.join(OPTIONS.input_tmp, "OTA", "android-info.txt"),
       "android-info.txt")
 
+def AddRadio(output_zip):
+  """If they exist, add RADIO files to the output."""
+  if os.path.isdir(os.path.join(OPTIONS.input_tmp, "RADIO")):
+    for radio_root, radio_dirs, radio_files in os.walk(os.path.join(OPTIONS.input_tmp, "RADIO")):
+      for radio_file in radio_files:
+        output_zip.write(os.path.join(radio_root, radio_file), radio_file)
+
+    # If a filesmap file exists, create a script to flash the radio images based on it
+    filesmap = os.path.join(OPTIONS.input_tmp, "RADIO/filesmap")
+    if os.path.isfile(filesmap):
+      print("creating flash-radio.sh...")
+      filesmap_data = open(filesmap, "r")
+      filesmap_regex = re.compile(r'^(\S+)\s\S+\/by-name\/(\S+).*')
+      tmp_flash_radio = tempfile.NamedTemporaryFile()
+      tmp_flash_radio.write("#!/bin/sh\n\n")
+      for filesmap_line in filesmap_data:
+        filesmap_entry = filesmap_regex.search(filesmap_line)
+        if filesmap_entry:
+          tmp_flash_radio.write("fastboot flash %s %s\n" % (filesmap_entry.group(2), filesmap_entry.group(1)))
+      tmp_flash_radio.flush()
+      if os.path.getsize(tmp_flash_radio.name) > 0:
+        output_zip.write(tmp_flash_radio.name, "flash-radio.sh")
+      else:
+        print("flash-radio.sh is empty, skipping...")
+      tmp_flash_radio.close()
 
 def main(argv):
   bootable_only = [False]
@@ -72,6 +103,7 @@ def main(argv):
   OPTIONS.input_tmp, input_zip = common.UnzipTemp(args[0])
   output_zip = zipfile.ZipFile(args[1], "w", compression=zipfile.ZIP_DEFLATED)
   CopyInfo(output_zip)
+  AddRadio(output_zip)
 
   try:
     done = False
@@ -79,12 +111,15 @@ def main(argv):
     if os.path.exists(images_path):
       # If this is a new target-files, it already contains the images,
       # and all we have to do is copy them to the output zip.
+      # Skip oem.img files since they are not needed in fastboot images.
       images = os.listdir(images_path)
       if images:
         for image in images:
           if bootable_only and image not in ("boot.img", "recovery.img"):
             continue
           if not image.endswith(".img"):
+            continue
+          if i == "oem.img":
             continue
           common.ZipWrite(
               output_zip, os.path.join(images_path, image), image)
@@ -109,7 +144,7 @@ def main(argv):
           recovery_image.AddToZip(output_zip)
 
       def banner(s):
-        print "\n\n++++ " + s + " ++++\n\n"
+        print("\n\n++++ " + s + " ++++\n\n")
 
       if not bootable_only:
         banner("AddSystem")
@@ -122,15 +157,17 @@ def main(argv):
           pass   # no vendor partition for this device
         banner("AddUserdata")
         add_img_to_target_files.AddUserdata(output_zip, prefix="")
+        banner("AddUserdataExtra")
+        add_img_to_target_files.AddUserdataExtra(output_zip, prefix="")
         banner("AddCache")
         add_img_to_target_files.AddCache(output_zip, prefix="")
 
   finally:
-    print "cleaning up..."
+    print("cleaning up...")
     common.ZipClose(output_zip)
     shutil.rmtree(OPTIONS.input_tmp)
 
-  print "done."
+  print("done.")
 
 
 if __name__ == '__main__':
@@ -138,7 +175,7 @@ if __name__ == '__main__':
     common.CloseInheritedPipes()
     main(sys.argv[1:])
   except common.ExternalError as e:
-    print
-    print "   ERROR: %s" % (e,)
-    print
+    print()
+    print("   ERROR: %s" % e)
+    print()
     sys.exit(1)
