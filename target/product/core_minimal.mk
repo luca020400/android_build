@@ -102,7 +102,7 @@ PRODUCT_BOOT_JARS := \
     org.apache.http.legacy.boot
 
 # The order of PRODUCT_SYSTEM_SERVER_JARS matters.
-ifneq ($(TARGET_DISABLE_CMSDK), true)
+ifeq ($(TARGET_DISABLE_CMSDK), false)
 PRODUCT_SYSTEM_SERVER_JARS := \
     org.cyanogenmod.platform \
     org.cyanogenmod.hardware

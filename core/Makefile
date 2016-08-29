@@ -1260,7 +1260,7 @@ endef
 $(BUILT_SYSTEMIMAGE): $(FULL_SYSTEMIMAGE_DEPS) $(INSTALLED_FILES_FILE)
 	$(call build-systemimage-target,$@)
 
-ifneq ($(TARGET_DISABLE_CMSDK), true)
+ifeq ($(TARGET_DISABLE_CMSDK), false)
 $(BUILT_SYSTEMIMAGE): checkapi
 $(BUILT_SYSTEMIMAGE): checkapi-cm
 endif
