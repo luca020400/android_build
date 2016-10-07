@@ -2417,7 +2417,7 @@ EOF
         adb shell rm $CHKPERM
     fi
     if $stop_n_start; then
-        adb shell start
+        adb reboot
     fi
     return 0
     else
