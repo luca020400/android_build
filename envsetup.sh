@@ -2213,7 +2213,11 @@ function mka() {
                 make -C $T -j `sysctl hw.ncpu|cut -d" " -f2` "$@"
                 ;;
             *)
-                mk_timer schedtool -I -e make -C $T -j$(cat /proc/cpuinfo | grep "^processor" | wc -l) "$@"
+                if [ -f /proc/sys/kernel/interactive ]; then
+                    mk_timer schedtool -I -e make -C $T -j$(cat /proc/cpuinfo | grep "^processor" | wc -l) "$@"
+                else
+                    mk_timer schedtool -B -n 1 -e ionice -n 1 make -C $T -j$(cat /proc/cpuinfo | grep "^processor" | wc -l) "$@"
+                fi
                 ;;
         esac
 
