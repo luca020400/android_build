@@ -566,11 +566,7 @@ function print_lunch_menu()
        echo "  (ohai, koush!)"
     fi
     echo
-    if [ "z${CM_DEVICES_ONLY}" != "z" ]; then
-       echo "Breakfast menu... pick a combo:"
-    else
-       echo "Lunch menu... pick a combo:"
-    fi
+    echo "Lunch menu... pick a combo:"
 
     local i=1
     local choice
@@ -579,10 +575,6 @@ function print_lunch_menu()
         echo " $i. $choice "
         i=$(($i+1))
     done | column
-
-    if [ "z${CM_DEVICES_ONLY}" != "z" ]; then
-       echo "... and don't forget the bacon!"
-    fi
 
     echo
 }
@@ -606,12 +598,6 @@ function breakfast()
     CM_DEVICES_ONLY="true"
     unset LUNCH_MENU_CHOICES
     add_lunch_combo full-eng
-    for f in `/bin/ls vendor/cm/vendorsetup.sh 2> /dev/null`
-        do
-            echo "including $f"
-            . $f
-        done
-    unset f
 
     if [ $# -eq 0 ]; then
         # No arguments, so let's have the full menu
@@ -626,7 +612,7 @@ function breakfast()
             if [ -z "$variant" ]; then
                 variant="userdebug"
             fi
-            lunch cm_$target-$variant
+            lunch aosp_$target-$variant
         fi
     fi
     return $?
