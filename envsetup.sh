@@ -145,15 +145,6 @@ function check_product()
         echo "Couldn't locate the top of the tree.  Try setting TOP." >&2
         return
     fi
-
-    if (echo -n $1 | grep -q -e "^cm_") ; then
-       CM_BUILD=$(echo -n $1 | sed -e 's/^cm_//g')
-       export BUILD_NUMBER=$((date +%s%N ; echo $CM_BUILD; hostname) | openssl sha1 | sed -e 's/.*=//g; s/ //g' | cut -c1-10)
-    else
-       CM_BUILD=
-    fi
-    export CM_BUILD
-
         TARGET_PRODUCT=$1 \
         TARGET_BUILD_VARIANT= \
         TARGET_BUILD_TYPE= \
@@ -595,7 +586,6 @@ function breakfast()
 {
     target=$1
     local variant=$2
-    CM_DEVICES_ONLY="true"
     unset LUNCH_MENU_CHOICES
     add_lunch_combo full-eng
 
@@ -608,7 +598,7 @@ function breakfast()
             # A buildtype was specified, assume a full device name
             lunch $target
         else
-            # This is probably just the CM model name
+            # This is probably just the model name
             if [ -z "$variant" ]; then
                 variant="userdebug"
             fi
@@ -623,7 +613,6 @@ alias bib=breakfast
 function lunch()
 {
     local answer
-    LUNCH_MENU_CHOICES=($(for l in ${LUNCH_MENU_CHOICES[@]}; do echo "$l"; done | sort))
 
     if [ "$1" ] ; then
         answer=$1
@@ -669,18 +658,6 @@ function lunch()
     fi
 
     local product=$(echo -n $selection | sed -e "s/-.*$//")
-    check_product $product
-    if [ $? -ne 0 ]
-    then
-        # if we can't find a product, try to grab it off the CM github
-        T=$(gettop)
-        pushd $T > /dev/null
-        build/tools/roomservice.py $product
-        popd > /dev/null
-        check_product $product
-    else
-        build/tools/roomservice.py $product true
-    fi
     TARGET_PRODUCT=$product \
     TARGET_BUILD_VARIANT=$variant \
     build_build_var_cache
@@ -704,8 +681,6 @@ function lunch()
     export TARGET_BUILD_TYPE=release
 
     echo
-
-    fixup_common_out_dir
 
     set_stuff_for_environment
     printconfig
