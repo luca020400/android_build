@@ -2261,8 +2261,7 @@ function repodiff() {
 # Return success if adb is up and not in recovery
 function _adb_connected {
     {
-        if [[ "$(adb get-state)" == device &&
-              "$(adb shell test -e /sbin/recovery; echo $?)" == 1 ]]
+        if [[ "$(adb get-state)" == device ]]
         then
             return 0
         fi
@@ -2286,19 +2285,8 @@ function dopush()
         echo "Device Found."
     fi
 
-    if (adb shell getprop ro.cm.device | grep -q "$CM_BUILD") || [ "$FORCE_PUSH" = "true" ];
-    then
-    # retrieve IP and PORT info if we're using a TCP connection
-    TCPIPPORT=$(adb devices | egrep '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+:[0-9]+[^0-9]+' \
-        | head -1 | awk '{print $1}')
     adb root &> /dev/null
     sleep 0.3
-    if [ -n "$TCPIPPORT" ]
-    then
-        # adb root just killed our connection
-        # so reconnect...
-        adb connect "$TCPIPPORT"
-    fi
     adb wait-for-device &> /dev/null
     sleep 0.3
     adb remount &> /dev/null
@@ -2363,14 +2351,8 @@ EOF
                 fi
                 adb shell restorecon "$TARGET"
             ;;
-            /system/priv-app/SystemUI/SystemUI.apk|/system/framework/*)
-                # Only need to stop services once
-                if ! $stop_n_start; then
-                    adb shell stop
-                    stop_n_start=true
-                fi
-                echo "Pushing: $TARGET"
-                adb push $FILE $TARGET
+            /system/framework/*/boot*)
+                # Ignore
             ;;
             *)
                 echo "Pushing: $TARGET"
@@ -2381,13 +2363,7 @@ EOF
     if [ -n "$CHKPERM" ]; then
         adb shell rm $CHKPERM
     fi
-    if $stop_n_start; then
-        adb reboot
-    fi
     return 0
-    else
-        echo "The connected device does not appear to be $CM_BUILD, run away!"
-    fi
 }
 
 alias mmp='dopush mm'
