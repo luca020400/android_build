@@ -1957,8 +1957,14 @@ $(INTERNAL_OTA_PACKAGE_TARGET): $(BUILT_TARGET_FILES_PACKAGE)
 	   $(if $(OEM_OTA_CONFIG), -o $(OEM_OTA_CONFIG)) \
 	   $(BUILT_TARGET_FILES_PACKAGE) $@
 
-.PHONY: otapackage
+CAF_TARGET_PACKAGE := $(PRODUCT_OUT)/$(CAF_VERSION).zip
+
+.PHONY: otapackage bacon
 otapackage: $(INTERNAL_OTA_PACKAGE_TARGET)
+bacon: otapackage
+	$(hide) ln -f $(INTERNAL_OTA_PACKAGE_TARGET) $(CAF_TARGET_PACKAGE)
+	$(hide) $(MD5SUM) $(CAF_TARGET_PACKAGE) > $(CAF_TARGET_PACKAGE).md5sum
+	@echo -e "Package Complete: $(CAF_TARGET_PACKAGE)"
 
 endif    # build_ota_package
 
